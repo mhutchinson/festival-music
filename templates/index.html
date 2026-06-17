@@ -1,0 +1,43 @@
+{{template "base" .}}
+
+{{define "title"}}Song Pool{{end}}
+
+{{define "content"}}
+<div class="vintage-panel">
+    <h2 style="font-size: 2rem; margin-bottom: 1rem; text-transform: uppercase;">Welcome to the Band Room 🎸</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+        Need a drummer? Can you sing lead for a song? Let's get together! Suggest a song you want to play and specify the roles needed, or browse the pool below and sign up for open roles.
+    </p>
+    <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-muted);">
+        ✨ Note: Signups are <strong>add-only</strong>. To change or remove a signup, please contact the festival organizer directly.
+    </div>
+</div>
+
+<form hx-get="/" hx-trigger="change, keyup changed delay:300ms from:input[name='q']" hx-target="#song-list" hx-swap="outerHTML" hx-push-url="true" class="search-bar-row">
+    <div class="search-input-wrapper">
+        <input type="text" name="q" placeholder="Search by song title, artist, notes, or suggester..." class="form-control" value="{{.Query}}" autocomplete="off">
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem; border: var(--border-thick); padding: 0.5rem 1rem; background-color: var(--bg-sand);">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; cursor: pointer; text-transform: uppercase; user-select: none;">
+            <input type="checkbox" name="open_only" value="true" {{if .OpenOnly}}checked{{end}}>
+            Only Open Roles
+        </label>
+    </div>
+</form>
+
+{{block "song-list" .}}
+<div class="song-list-grid" id="song-list">
+    {{if .Songs}}
+        {{range .Songs}}
+            {{template "song-card" .}}
+        {{end}}
+    {{else}}
+        <div class="vintage-panel" style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; width: 100%;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">No tracks found in the crate</h3>
+            <p style="color: var(--ink-muted); font-family: var(--font-mono);">Try broadening your search or suggest a new song to start the pool!</p>
+        </div>
+    {{end}}
+</div>
+{{end}}
+
+{{end}}

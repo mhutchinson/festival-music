@@ -1,0 +1,124 @@
+{{template "base" .}}
+
+{{define "title"}}Suggest a Song{{end}}
+
+{{define "header-action"}}
+<a href="/" class="btn btn-secondary">Back to Crate</a>
+{{end}}
+
+{{define "content"}}
+<div class="vintage-panel" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="font-size: 2.2rem; text-transform: uppercase; margin-bottom: 1.5rem; border-bottom: var(--border-thick); padding-bottom: 0.5rem;">Suggest a Track 💿</h2>
+    
+    <form action="/suggest" method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label" for="title">Song Title *</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Come Together" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="artist">Artist / Link</label>
+                <input type="text" id="artist" name="artist" class="form-control" placeholder="e.g. The Beatles (or Spotify/YT Link)">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label" for="suggested_by">Suggested By *</label>
+                <input type="text" id="suggested_by" name="suggested_by" class="form-control" placeholder="Your name" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="notes">Notes / Custom Instructions</label>
+            <textarea id="notes" name="notes" class="form-control" placeholder="Request key transpose, specific tempo, structure info, or additional info here..."></textarea>
+        </div>
+
+        <h3 style="font-size: 1.4rem; text-transform: uppercase; margin-top: 2rem; margin-bottom: 1rem; font-family: var(--font-mono);">Select Roles Needed</h3>
+        <p style="color: var(--ink-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+            Check the roles needed for this song. You can optionally pre-assign names (e.g. if you or a friend are playing them). Unassigned roles will be open for others to sign up.
+        </p>
+
+        <div class="roles-selector-grid">
+            {{range $role := .StandardRoles}}
+            <div class="role-checkbox-card" onclick="toggleRoleCard(this)">
+                <div class="role-checkbox-header">
+                    <input type="checkbox" name="roles" value="{{$role}}" id="role-{{$role}}" onclick="event.stopPropagation(); updateCardState(this)">
+                    <label for="role-{{$role}}" onclick="event.stopPropagation();" style="font-weight: 700; cursor: pointer;">{{$role}}</label>
+                </div>
+                <div class="role-checkbox-assignee" onclick="event.stopPropagation();">
+                    <input type="text" name="assignee_{{$role}}" placeholder="Musician (optional)" class="form-control btn-sm" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; margin-top: 0.5rem;" autocomplete="off">
+                </div>
+            </div>
+            {{end}}
+        </div>
+
+        <h3 style="font-size: 1.4rem; text-transform: uppercase; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-mono);">Add Custom Roles</h3>
+        <p style="color: var(--ink-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+            Need other instruments? Add up to 3 custom roles (e.g. Trumpet, Violin, Synth, Cowbell).
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+            <div style="border: var(--border-thin); padding: 1rem; background-color: var(--bg-cream);">
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label class="form-label" style="font-size: 0.75rem;">Custom Role 1</label>
+                    <input type="text" name="custom_role_1" placeholder="e.g. Trumpet" class="form-control btn-sm" style="font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" name="custom_assignee_1" placeholder="Musician (optional)" class="form-control btn-sm" style="font-size: 0.85rem;">
+                </div>
+            </div>
+            <div style="border: var(--border-thin); padding: 1rem; background-color: var(--bg-cream);">
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label class="form-label" style="font-size: 0.75rem;">Custom Role 2</label>
+                    <input type="text" name="custom_role_2" placeholder="e.g. Violin" class="form-control btn-sm" style="font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" name="custom_assignee_2" placeholder="Musician (optional)" class="form-control btn-sm" style="font-size: 0.85rem;">
+                </div>
+            </div>
+            <div style="border: var(--border-thin); padding: 1rem; background-color: var(--bg-cream);">
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label class="form-label" style="font-size: 0.75rem;">Custom Role 3</label>
+                    <input type="text" name="custom_role_3" placeholder="e.g. Saxophone" class="form-control btn-sm" style="font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" name="custom_assignee_3" placeholder="Musician (optional)" class="form-control btn-sm" style="font-size: 0.85rem;">
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: right; border-top: var(--border-thick); padding-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2.5rem;">Add Song to Pool</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleRoleCard(card) {
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    checkbox.checked = !checkbox.checked;
+    updateCardState(checkbox);
+}
+
+function updateCardState(checkbox) {
+    const card = checkbox.closest('.role-checkbox-card');
+    if (checkbox.checked) {
+        card.classList.add('selected');
+        // Auto-focus assignee input when checked
+        const input = card.querySelector('input[type="text"]');
+        if (input) {
+            input.focus();
+        }
+    } else {
+        card.classList.remove('selected');
+        // Clear assignee value when unchecked
+        const input = card.querySelector('input[type="text"]');
+        if (input) {
+            input.value = '';
+        }
+    }
+}
+</script>
+{{end}}

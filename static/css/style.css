@@ -1,0 +1,559 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Mono:wght@400;700&display=swap');
+
+/* ==========================================
+   DESIGN SYSTEM & CUSTOM PROPERTIES
+   ========================================== */
+:root {
+  --bg-cream: #F5F2EB;
+  --bg-sand: #EBE5D5;
+  --bg-record-label: #EAE2CF;
+  
+  --ink-charcoal: #1E1C18;
+  --ink-muted: #5C5549;
+  
+  --color-rust: #D0533C;
+  --color-rust-hover: #B4422D;
+  --color-mustard: #E2A62C;
+  --color-mustard-hover: #C68F20;
+  --color-sage: #527360;
+  --color-sage-hover: #415B4C;
+  --color-sky: #6B91A4;
+  
+  --border-thick: 3px solid var(--ink-charcoal);
+  --border-thin: 2px solid var(--ink-charcoal);
+  --shadow-retro: 5px 5px 0px var(--ink-charcoal);
+  --shadow-retro-hover: 2px 2px 0px var(--ink-charcoal);
+  
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  
+  --transition-snappy: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ==========================================
+   RESET & BASE STYLES
+   ========================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-cream);
+  color: var(--ink-charcoal);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  padding-bottom: 5rem;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-cream);
+  border-left: var(--border-thin);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--ink-charcoal);
+  border: 3px solid var(--bg-cream);
+  border-radius: 6px;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+p {
+  color: var(--ink-charcoal);
+}
+
+a {
+  color: var(--color-rust);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition-snappy);
+}
+a:hover {
+  color: var(--color-rust-hover);
+}
+
+/* ==========================================
+   LAYOUT
+   ========================================== */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.header-band {
+  background-color: var(--bg-sand);
+  border-bottom: var(--border-thick);
+  padding: 2.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* ==========================================
+   VINYL LOGO AND ROTATION
+   ========================================== */
+.vinyl-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vinyl-record {
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle, 
+    var(--color-rust) 0%, 
+    var(--color-rust) 18%, 
+    #111111 20%, 
+    #222222 35%, 
+    #111111 40%, 
+    #222222 55%, 
+    #111111 60%, 
+    #222222 80%, 
+    #111111 85%, 
+    #000000 100%
+  );
+  border-radius: 50%;
+  border: var(--border-thin);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+  animation: spin 8s linear infinite;
+  flex-shrink: 0;
+}
+
+.vinyl-record::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background-color: var(--bg-cream);
+  border-radius: 50%;
+  border: 1px solid var(--ink-charcoal);
+}
+
+.brand-text h1 {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.brand-text p {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================
+   BUTTONS (Retro Pop style)
+   ========================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink-charcoal);
+  background-color: var(--bg-cream);
+  border: var(--border-thick);
+  border-radius: 0;
+  box-shadow: var(--shadow-retro);
+  cursor: pointer;
+  transition: var(--transition-snappy);
+  user-select: none;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--ink-charcoal);
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: var(--shadow-retro-hover);
+}
+
+.btn-primary {
+  background-color: var(--color-rust);
+  color: var(--bg-cream);
+}
+.btn-primary:hover {
+  background-color: var(--color-rust-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-mustard);
+  color: var(--ink-charcoal);
+}
+.btn-secondary:hover {
+  background-color: var(--color-mustard-hover);
+}
+
+.btn-success {
+  background-color: var(--color-sage);
+  color: var(--bg-cream);
+}
+.btn-success:hover {
+  background-color: var(--color-sage-hover);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  box-shadow: 3px 3px 0px var(--ink-charcoal);
+}
+.btn-sm:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--ink-charcoal);
+}
+.btn-sm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--ink-charcoal);
+}
+
+/* ==========================================
+   CARDS & CONTAINERS
+   ========================================== */
+.vintage-panel {
+  background-color: var(--bg-sand);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-retro);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.song-card {
+  background-color: var(--bg-cream);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-retro);
+  padding: 1.5rem;
+  transition: var(--transition-snappy);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.song-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--ink-charcoal);
+}
+
+.song-header {
+  border-bottom: var(--border-thin);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.song-title {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.song-artist {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-top: 0.25rem;
+}
+
+.song-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: 0.5rem;
+}
+
+.song-notes {
+  background-color: rgba(235, 229, 213, 0.5);
+  border-left: 4px solid var(--color-mustard);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+/* ==========================================
+   ROLES & SIGNUPS SECTION
+   ========================================== */
+.roles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.role-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid var(--bg-sand);
+  background-color: var(--bg-sand);
+  font-size: 0.9rem;
+}
+
+.role-label {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.role-label::before {
+  content: '⚡';
+  font-size: 0.75rem;
+}
+
+.role-assignee {
+  font-family: var(--font-mono);
+  font-weight: bold;
+  background-color: var(--ink-charcoal);
+  color: var(--bg-cream);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+}
+
+.role-open {
+  font-family: var(--font-mono);
+  color: var(--color-rust);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* HTMX form inline inside song card */
+.signup-form {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+.signup-input {
+  flex-grow: 1;
+  padding: 0.25rem 0.5rem;
+  border: var(--border-thin);
+  background-color: var(--bg-cream);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+}
+.signup-input:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--color-rust);
+}
+
+/* ==========================================
+   FORMS & INPUTS (General)
+   ========================================== */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: var(--border-thick);
+  background-color: var(--bg-cream);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--ink-charcoal);
+  border-radius: 0;
+  transition: var(--transition-snappy);
+}
+
+.form-control:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--color-rust);
+  box-shadow: 3px 3px 0px var(--ink-charcoal);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Custom checkbox styles */
+.roles-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.role-checkbox-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  border: var(--border-thin);
+  background-color: var(--bg-cream);
+  cursor: pointer;
+  transition: var(--transition-snappy);
+}
+
+.role-checkbox-card:hover {
+  background-color: var(--bg-sand);
+}
+
+.role-checkbox-card.selected {
+  background-color: var(--color-mustard);
+  box-shadow: 3px 3px 0px var(--ink-charcoal);
+}
+
+.role-checkbox-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.role-checkbox-assignee {
+  margin-top: 0.5rem;
+}
+
+/* ==========================================
+   UTILITY & SEARCH
+   ========================================== */
+.search-bar-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  flex-grow: 1;
+  position: relative;
+}
+
+.search-input-wrapper::after {
+  content: '🔍';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.song-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+/* Loading indicator for HTMX */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator {
+  opacity: 1;
+}
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  display: none;
+}
+.htmx-request.loading-overlay {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(245, 242, 235, 0.7);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Back button */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+/* Flash Messages */
+.flash-message {
+  padding: 1rem;
+  border: var(--border-thick);
+  margin-bottom: 1.5rem;
+  font-family: var(--font-mono);
+  box-shadow: var(--shadow-retro);
+}
+.flash-success {
+  background-color: var(--color-sage);
+  color: var(--bg-cream);
+}
+.flash-error {
+  background-color: var(--color-rust);
+  color: var(--bg-cream);
+}
+
+/* Responsive fixes */
+@media (max-width: 600px) {
+  .header-grid {
+    flex-direction: column;
+    text-align: center;
+  }
+  .brand-text h1 {
+    font-size: 2rem;
+  }
+  .vintage-panel {
+    padding: 1.25rem;
+  }
+}

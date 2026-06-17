@@ -1,0 +1,50 @@
+{{define "song-card"}}
+<div class="song-card" id="song-card-{{.ID}}">
+    <div class="song-header">
+        <h3 class="song-title">{{.Title}}</h3>
+        {{if .Artist}}
+            {{if hasPrefix .Artist "http"}}
+                <div class="song-artist"><a href="{{.Artist}}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.25rem;">Listen to Track 🔗</a></div>
+            {{else}}
+                <div class="song-artist">By {{.Artist}}</div>
+            {{end}}
+        {{else}}
+            <div class="song-artist">&nbsp;</div>
+        {{end}}
+        <div class="song-meta">
+            <span>Suggested by: <strong>{{.SuggestedBy}}</strong></span>
+        </div>
+    </div>
+    
+    {{if .Notes}}
+        <div class="song-notes">
+            "{{.Notes}}"
+        </div>
+    {{else}}
+        <div style="height: 10px;"></div>
+    {{end}}
+
+    <div class="roles-grid">
+        {{$song := .}}
+        {{range $role := .Roles}}
+            <div class="role-row">
+                <span class="role-label">{{$role}}</span>
+                
+                {{$signup := $song.GetSignupForRole $role}}
+                {{if $signup}}
+                    <span class="role-assignee">{{$signup.Musician}}</span>
+                {{else}}
+                    <div class="role-open">
+                        <span>Open</span>
+                        <form class="signup-form" hx-post="/songs/{{$song.ID}}/signup" hx-target="#song-card-{{$song.ID}}" hx-swap="outerHTML" hx-indicator="#loading-indicator">
+                            <input type="hidden" name="role" value="{{$role}}">
+                            <input type="text" name="musician" placeholder="Name" class="signup-input" required>
+                            <button type="submit" class="btn btn-sm btn-success">Join</button>
+                        </form>
+                    </div>
+                {{end}}
+            </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
