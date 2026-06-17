@@ -11,7 +11,7 @@ Built in **Go** using **HTMX** for dynamic, single-page-style updates and **Vani
 - **Backend**: Go (using standard library `net/http` and `html/template`).
 - **Database**: Google Sheets (via the Google Sheets API v4).
 - **Frontend**: HTMX (local) + Vanilla CSS (No build/compile steps, lightweight, serverless-ready).
-- **Deployment**: Primary deploy on **GCP Cloud Run** (Serverless Free Tier), with VM-based Docker deployment supported as an alternative.
+- **Deployment**: **GCP Cloud Run** (Serverless Free Tier).
 - **License**: Apache 2.0.
 
 ---
@@ -114,17 +114,12 @@ We recommend deploying to **GCP Cloud Run** using the **GCP Free Tier**, which e
 
 ---
 
-## 🖥️ Alternative Deployment Option: GCP VM (Docker Compose)
+## 📜 Historical Note
 
-If you prefer to host on a persistent VM instance (like a free GCP `e2-micro`), you can run the app inside Docker using Docker Compose and Watchtower for automated updates.
-
-1. Copy [docker-compose.yml](docker-compose.yml) and your Google Service Account `credentials.json` file to the VM.
-2. Set your `SPREADSHEET_ID` in a `.env` file on the VM.
-3. Start the application:
-   ```bash
-   docker compose up -d
-   ```
-4. **Watchtower** will poll your container registry (e.g. GitHub Container Registry or GCP Artifact Registry) every 5 minutes and automatically update and restart the app container whenever you push a new image.
+The VM-based deployment configurations (including `docker-compose.yml` and the GitHub Actions workflows for automated Watchtower updates) were cleaned up and removed after commit `4790423`. If you ever need to restore or reference those files, you can retrieve them directly from Git history:
+```bash
+git checkout 4790423 -- docker-compose.yml .github/
+```
 
 ---
 
