@@ -1,0 +1,33 @@
+# Compiled binaries and build artifacts
+app
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Local environment files (contains spreadsheet IDs, ports, etc.)
+.env
+.env.*
+
+# Sensitive credentials & Google Service Account JSON keys
+credentials.json
+*.json
+!go.mod
+!go.sum
+!package.json
+!plugin.json
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDE and Editor configurations
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
