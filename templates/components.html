@@ -29,19 +29,15 @@
         {{range $role := .Roles}}
             <div class="role-row">
                 <span class="role-label">{{$role}}</span>
-                
                 {{$signup := $song.GetSignupForRole $role}}
                 {{if $signup}}
-                    <span class="role-assignee">{{$signup.Musician}}</span>
+                    <div class="role-assignee-subtitle">Signed up: <strong>{{$signup.Musician}}</strong></div>
                 {{else}}
-                    <div class="role-open">
-                        <span>Open</span>
-                        <form class="signup-form" hx-post="/songs/{{$song.ID}}/signup" hx-target="#song-card-{{$song.ID}}" hx-swap="outerHTML" hx-indicator="#loading-indicator">
-                            <input type="hidden" name="role" value="{{$role}}">
-                            <input type="text" name="musician" placeholder="Name" class="signup-input" required>
-                            <button type="submit" class="btn btn-sm btn-success">Join</button>
-                        </form>
-                    </div>
+                    <form class="signup-form" hx-post="/songs/{{$song.ID}}/signup" hx-target="#song-card-{{$song.ID}}" hx-swap="outerHTML" hx-indicator="#loading-indicator">
+                        <input type="hidden" name="role" value="{{$role}}">
+                        <input type="text" name="musician" placeholder="Enter name to play..." class="signup-input" required>
+                        <button type="submit" class="btn btn-sm btn-success">Join</button>
+                    </form>
                 {{end}}
             </div>
         {{end}}

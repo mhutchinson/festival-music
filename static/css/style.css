@@ -315,9 +315,10 @@ a:hover {
 
 .role-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
   border: 1px solid var(--bg-sand);
   background-color: var(--bg-sand);
   font-size: 0.9rem;
@@ -335,25 +336,14 @@ a:hover {
   font-size: 0.75rem;
 }
 
-.role-assignee {
+.role-assignee-subtitle {
   font-family: var(--font-mono);
-  font-weight: bold;
-  background-color: var(--ink-charcoal);
-  color: var(--bg-cream);
-  padding: 0.2rem 0.5rem;
-  border-radius: 2px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  padding-left: 1.25rem;
 }
 
-.role-open {
-  font-family: var(--font-mono);
-  color: var(--color-rust);
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+
 
 /* HTMX form inline inside song card */
 .signup-form {

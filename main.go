@@ -12,7 +12,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var tmpl *template.Template
+var (
+	indexTmpl   *template.Template
+	suggestTmpl *template.Template
+)
 
 func main() {
 	// Parse command-line flags
@@ -62,19 +65,29 @@ func main() {
 	}
 }
 
-// loadTemplates parses all templates and registers the helper functions.
+// loadTemplates parses all templates and registers the helper functions in isolated namespaces.
 func loadTemplates() {
-	var err error
-	tmpl, err = template.New("").Funcs(template.FuncMap{
+	funcMap := template.FuncMap{
 		"hasPrefix": strings.HasPrefix,
-	}).ParseFiles(
+	}
+
+	var err error
+	indexTmpl, err = template.New("").Funcs(funcMap).ParseFiles(
 		"templates/base.html",
 		"templates/index.html",
+		"templates/components.html",
+	)
+	if err != nil {
+		log.Fatalf("Fatal error parsing index templates: %v", err)
+	}
+
+	suggestTmpl, err = template.New("").Funcs(funcMap).ParseFiles(
+		"templates/base.html",
 		"templates/suggest.html",
 		"templates/components.html",
 	)
 	if err != nil {
-		log.Fatalf("Fatal error parsing HTML templates: %v", err)
+		log.Fatalf("Fatal error parsing suggest templates: %v", err)
 	}
 }
 
@@ -110,9 +123,9 @@ func handleIndex(db *SheetsDB) http.HandlerFunc {
 
 		// If HTMX request, render only the song list partial
 		if r.Header.Get("HX-Request") == "true" {
-			err = tmpl.ExecuteTemplate(w, "song-list", data)
+			err = indexTmpl.ExecuteTemplate(w, "song-list", data)
 		} else {
-			err = tmpl.ExecuteTemplate(w, "index.html", data)
+			err = indexTmpl.ExecuteTemplate(w, "index.html", data)
 		}
 
 		if err != nil {
@@ -143,7 +156,7 @@ func handleSuggest(db *SheetsDB) http.HandlerFunc {
 					"Keyboards",
 				},
 			}
-			err := tmpl.ExecuteTemplate(w, "suggest.html", data)
+			err := suggestTmpl.ExecuteTemplate(w, "suggest.html", data)
 			if err != nil {
 				log.Printf("Template execution failed: %v", err)
 			}
@@ -279,7 +292,7 @@ func handleSignup(db *SheetsDB) http.HandlerFunc {
 		}
 
 		// Return only the updated song card partial
-		err = tmpl.ExecuteTemplate(w, "song-card", targetSong)
+		err = indexTmpl.ExecuteTemplate(w, "song-card", targetSong)
 		if err != nil {
 			log.Printf("Error rendering song-card component: %v", err)
 		}
