@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"google.golang.org/api/option"
@@ -36,6 +37,10 @@ type Signup struct {
 type SheetsDB struct {
 	srv           *sheets.Service
 	spreadsheetID string
+	cacheMu       sync.RWMutex
+	cachedSongs   []Song
+	lastFetch     time.Time
+	cacheTTL      time.Duration
 }
 
 // NewSheetsDB initializes the Sheets service client using Application Default Credentials (ADC).
@@ -56,6 +61,7 @@ func NewSheetsDB() (*SheetsDB, error) {
 	db := &SheetsDB{
 		srv:           srv,
 		spreadsheetID: spreadsheetID,
+		cacheTTL:      5 * time.Second,
 	}
 
 	// Auto-initialize sheets and headers if they don't exist
@@ -145,76 +151,44 @@ func (db *SheetsDB) writeHeaderIfEmpty(sheetName string, headers []interface{}) 
 
 // GetSongs fetches all songs and their corresponding signups.
 func (db *SheetsDB) GetSongs() ([]Song, error) {
-	// 1. Fetch Songs data (excluding header)
-	songsResp, err := db.srv.Spreadsheets.Values.Get(db.spreadsheetID, "Songs!A2:G").Do()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve songs data: %w", err)
+	db.cacheMu.RLock()
+	if time.Since(db.lastFetch) < db.cacheTTL && db.cachedSongs != nil {
+		songs := make([]Song, len(db.cachedSongs))
+		copy(songs, db.cachedSongs)
+		db.cacheMu.RUnlock()
+		return songs, nil
 	}
+	db.cacheMu.RUnlock()
 
-	var songs []Song
-	songMap := make(map[string]*Song)
+	db.cacheMu.Lock()
+	defer db.cacheMu.Unlock()
 
-	for _, row := range songsResp.Values {
-		id := getString(row, 0)
-		if id == "" {
-			continue
-		}
-		var roles []string
-		rolesStr := getString(row, 6)
-		if rolesStr != "" {
-			for _, r := range strings.Split(rolesStr, ",") {
-				r = strings.TrimSpace(r)
-				if r != "" {
-					roles = append(roles, r)
-				}
-			}
-		}
-		song := Song{
-			ID:          id,
-			Title:       getString(row, 1),
-			Artist:      getString(row, 2),
-			Notes:       getString(row, 3),
-			SuggestedBy: getString(row, 4),
-			CreatedAt:   getString(row, 5),
-			Roles:       roles,
-			Signups:     []Signup{},
-		}
-		songs = append(songs, song)
-		// Store pointer to update signups later
-		songMap[id] = &songs[len(songs)-1]
-	}
-
-	// 2. Fetch Signups data (excluding header)
-	signupsResp, err := db.srv.Spreadsheets.Values.Get(db.spreadsheetID, "Signups!A2:D").Do()
-	if err != nil {
-		// If signups fails or sheet is empty, return songs as is
-		log.Printf("Warning: signups retrieval returned error: %v", err)
+	// Double check condition after acquiring write lock
+	if time.Since(db.lastFetch) < db.cacheTTL && db.cachedSongs != nil {
+		songs := make([]Song, len(db.cachedSongs))
+		copy(songs, db.cachedSongs)
 		return songs, nil
 	}
 
-	for _, row := range signupsResp.Values {
-		songID := getString(row, 0)
-		role := getString(row, 1)
-		musician := getString(row, 2)
-		signedUpAt := getString(row, 3)
-
-		if songID == "" || role == "" || musician == "" {
-			continue
+	songs, err := db.fetchSongsFromSheets()
+	if err != nil {
+		// Fallback to expired cache under API rate limits or Sheets downtime
+		if db.cachedSongs != nil {
+			log.Printf("Warning: Fetching from Sheets failed (%v), falling back to expired cache", err)
+			songs := make([]Song, len(db.cachedSongs))
+			copy(songs, db.cachedSongs)
+			return songs, nil
 		}
-
-		signup := Signup{
-			SongID:     songID,
-			Role:       role,
-			Musician:   musician,
-			SignedUpAt: signedUpAt,
-		}
-
-		if songPtr, ok := songMap[songID]; ok {
-			songPtr.Signups = append(songPtr.Signups, signup)
-		}
+		return nil, err
 	}
 
-	return songs, nil
+	db.cachedSongs = songs
+	db.lastFetch = time.Now()
+
+	// Return a copy to prevent race conditions
+	songsCopy := make([]Song, len(songs))
+	copy(songsCopy, songs)
+	return songsCopy, nil
 }
 
 // AddSong adds a new song to the sheet, along with any initial signups.
@@ -275,6 +249,7 @@ func (db *SheetsDB) AddSong(song Song) error {
 		}
 	}
 
+	db.invalidateCache()
 	return nil
 }
 
@@ -298,6 +273,7 @@ func (db *SheetsDB) AddSignup(songID string, role string, musician string) error
 		return fmt.Errorf("unable to sign up for role: %w", err)
 	}
 
+	db.invalidateCache()
 	return nil
 }
 
@@ -321,5 +297,84 @@ func (s Song) GetSignupForRole(role string) *Signup {
 		}
 	}
 	return nil
+}
+
+// invalidateCache clears the last fetch time to force reload on next read.
+func (db *SheetsDB) invalidateCache() {
+	db.cacheMu.Lock()
+	db.lastFetch = time.Time{}
+	db.cacheMu.Unlock()
+}
+
+// fetchSongsFromSheets retrieves data from Google Sheets in a single BatchGet call.
+func (db *SheetsDB) fetchSongsFromSheets() ([]Song, error) {
+	resp, err := db.srv.Spreadsheets.Values.BatchGet(db.spreadsheetID).
+		Ranges("Songs!A2:G", "Signups!A2:D").Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve batch data: %w", err)
+	}
+
+	if len(resp.ValueRanges) < 2 {
+		return nil, fmt.Errorf("unexpected value ranges returned: %d", len(resp.ValueRanges))
+	}
+
+	songsRange := resp.ValueRanges[0]
+	signupsRange := resp.ValueRanges[1]
+
+	var songs []Song
+	songMap := make(map[string]int)
+
+	for _, row := range songsRange.Values {
+		id := strings.TrimSpace(getString(row, 0))
+		if id == "" {
+			continue
+		}
+		var roles []string
+		rolesStr := getString(row, 6)
+		if rolesStr != "" {
+			for _, r := range strings.Split(rolesStr, ",") {
+				r = strings.TrimSpace(r)
+				if r != "" {
+					roles = append(roles, r)
+				}
+			}
+		}
+		song := Song{
+			ID:          id,
+			Title:       getString(row, 1),
+			Artist:      getString(row, 2),
+			Notes:       getString(row, 3),
+			SuggestedBy: getString(row, 4),
+			CreatedAt:   getString(row, 5),
+			Roles:       roles,
+			Signups:     []Signup{},
+		}
+		songs = append(songs, song)
+		songMap[id] = len(songs) - 1
+	}
+
+	for _, row := range signupsRange.Values {
+		songID := strings.TrimSpace(getString(row, 0))
+		role := getString(row, 1)
+		musician := getString(row, 2)
+		signedUpAt := getString(row, 3)
+
+		if songID == "" || role == "" || musician == "" {
+			continue
+		}
+
+		signup := Signup{
+			SongID:     songID,
+			Role:       role,
+			Musician:   musician,
+			SignedUpAt: signedUpAt,
+		}
+
+		if idx, ok := songMap[songID]; ok {
+			songs[idx].Signups = append(songs[idx].Signups, signup)
+		}
+	}
+
+	return songs, nil
 }
 

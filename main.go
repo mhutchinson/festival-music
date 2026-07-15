@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -263,17 +264,10 @@ func handleSignup(db *SheetsDB) http.HandlerFunc {
 			return
 		}
 
-		// Add signup
-		if err := db.AddSignup(songID, role, musician); err != nil {
-			log.Printf("Error adding signup to sheet: %v", err)
-			http.Error(w, "Error updating signup in database", http.StatusInternalServerError)
-			return
-		}
-
-		// Reload songs list to build updated song component
+		// 1. Fetch current songs to verify if the role is already taken
 		songs, err := db.GetSongs()
 		if err != nil {
-			log.Printf("Error reloading songs list: %v", err)
+			log.Printf("Error checking role status: %v", err)
 			http.Error(w, "Error synchronizing database", http.StatusInternalServerError)
 			return
 		}
@@ -287,9 +281,35 @@ func handleSignup(db *SheetsDB) http.HandlerFunc {
 		}
 
 		if targetSong == nil {
-			http.Error(w, "Song not found after update", http.StatusNotFound)
+			http.Error(w, "Song not found", http.StatusNotFound)
 			return
 		}
+
+		// 2. Prevent overwriting an existing signup
+		if existing := targetSong.GetSignupForRole(role); existing != nil {
+			log.Printf("Blocked signup attempt for %s (%s) - already taken by %s", role, targetSong.Title, existing.Musician)
+			// Return the current card (shows the existing signup) so the UI corrects itself
+			err = indexTmpl.ExecuteTemplate(w, "song-card", targetSong)
+			if err != nil {
+				log.Printf("Error rendering song-card component: %v", err)
+			}
+			return
+		}
+
+		// 3. Write signup to Sheets
+		if err := db.AddSignup(songID, role, musician); err != nil {
+			log.Printf("Error adding signup to sheet: %v", err)
+			http.Error(w, "Error updating signup in database", http.StatusInternalServerError)
+			return
+		}
+
+		// 4. Update the local struct to include the new signup (avoids extra Sheets API read)
+		targetSong.Signups = append(targetSong.Signups, Signup{
+			SongID:     songID,
+			Role:       role,
+			Musician:   musician,
+			SignedUpAt: time.Now().Format(time.RFC3339),
+		})
 
 		// Return only the updated song card partial
 		err = indexTmpl.ExecuteTemplate(w, "song-card", targetSong)
